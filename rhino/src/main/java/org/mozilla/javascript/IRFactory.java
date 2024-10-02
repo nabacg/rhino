@@ -19,6 +19,7 @@ import org.mozilla.javascript.ast.BigIntLiteral;
 import org.mozilla.javascript.ast.Block;
 import org.mozilla.javascript.ast.BreakStatement;
 import org.mozilla.javascript.ast.CatchClause;
+import org.mozilla.javascript.ast.ClassDefNode;
 import org.mozilla.javascript.ast.ComputedPropertyKey;
 import org.mozilla.javascript.ast.ConditionalExpression;
 import org.mozilla.javascript.ast.ContinueStatement;
@@ -40,6 +41,7 @@ import org.mozilla.javascript.ast.KeywordLiteral;
 import org.mozilla.javascript.ast.Label;
 import org.mozilla.javascript.ast.LabeledStatement;
 import org.mozilla.javascript.ast.LetNode;
+import org.mozilla.javascript.ast.MethodNode;
 import org.mozilla.javascript.ast.Name;
 import org.mozilla.javascript.ast.NewExpression;
 import org.mozilla.javascript.ast.NumberLiteral;
@@ -247,6 +249,9 @@ public final class IRFactory {
                 }
                 if (node instanceof XmlLiteral) {
                     return transformXmlLiteral((XmlLiteral) node);
+                }
+                if (node instanceof ClassDefNode) {
+                    return transformClass((ClassDefNode) node);
                 }
                 throw new IllegalArgumentException("Can't transform: " + node);
         }
@@ -560,6 +565,32 @@ public final class IRFactory {
         } finally {
             parser.currentScope = savedScope;
         }
+    }
+
+    private Node transformClass(ClassDefNode node) {
+        Name className = node.getClassName();
+
+        FunctionNode constructor = node.getConstructor();
+        if (constructor != null) {
+            constructor.setFunctionName(node.getClassName());
+            node.setConstructorIR(transformFunction(constructor));
+            node.addFunction(constructor); // Ctor needs to be first function in ClassDefNode
+        }
+
+        for (MethodNode method : node.getMethods()) {
+            FunctionNode function = method.getFunction();
+            method.setMethodIR(transform(function));
+            if (method.isStatic()) {
+                function.putIntProp(Node.STATIC_CLASS_PROPERTY, 1);
+            }
+            node.addFunction(function);
+        }
+
+        int index = parser.currentScriptOrFn.addClass(node);
+
+        Node result = Node.newString(Token.CONSTRUCTOR, className.getString());
+        result.putIntProp(Node.CLASS_PROP, index);
+        return result;
     }
 
     private Node transformFunction(FunctionNode fn) {

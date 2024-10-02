@@ -64,6 +64,33 @@ final class InterpretedFunction extends NativeFunction implements Script {
         return f;
     }
 
+    public static InterpretedFunction createClassConstructor(
+            Context cx, Scriptable scope, InterpretedFunction parent, int index) {
+        InterpretedFunction classWrapper = new InterpretedFunction(parent, index);
+        InterpretedFunction ctor = new InterpretedFunction(classWrapper, 0);
+        // can I set `this` here using ClassDefinition object?
+        ctor.initScriptFunction(cx, scope, false);
+
+//        ScriptableObject.defineProperty(ctor, "test", 42, READONLY);
+        Scriptable proto = cx.newObject(scope);
+        for (int i = 1; i < classWrapper.idata.getFunctionCount(); i++) {
+            var function = new InterpretedFunction(classWrapper, i);
+            function.initScriptFunction(cx, scope, false);
+
+            if (function.idata.isStaticMethod) {
+                ScriptableObject.defineProperty(
+                        ctor, function.getFunctionName(), function, READONLY);
+            } else {
+                ScriptableObject.defineProperty(
+                        proto, function.getFunctionName(), function, READONLY);
+            }
+        }
+
+        ctor.setPrototypeProperty(proto);
+
+        return ctor;
+    }
+
     @Override
     public String getFunctionName() {
         return (idata.itsName == null) ? "" : idata.itsName;

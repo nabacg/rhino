@@ -360,7 +360,7 @@ class TokenStream implements Parser.CurrentPositionReporter {
                 Id_break = Token.BREAK,
                 Id_case = Token.CASE,
                 Id_catch = Token.CATCH,
-                Id_class = Token.RESERVED,
+                Id_class = Token.CLASS,
                 Id_const = Token.CONST,
                 Id_continue = Token.CONTINUE,
                 Id_debugger = Token.DEBUGGER,
@@ -411,7 +411,8 @@ class TokenStream implements Parser.CurrentPositionReporter {
                 // Non ReservedWord, but Non IdentifierName in strict mode code.
                 // 12.1.1 Static Semantics: Early Errors
                 Id_let = Token.LET, // TODO : Valid IdentifierName in non-strict mode.
-                Id_static = Token.RESERVED;
+                Id_static = Token.STATIC,
+                Id_constructor = Token.CONSTRUCTOR;
 
         int id = 0;
         switch (name) {
@@ -563,9 +564,14 @@ class TokenStream implements Parser.CurrentPositionReporter {
                 id = Id_let;
                 break;
             case "static":
-                if (isStrict) {
-                    id = Id_static;
-                }
+                //                if (isStrict) {
+                //                    id = Id_static;
+                //                }
+                // TODO - check why this was only in STRICT MODE
+                id = Id_static;
+                break;
+            case "constructor":
+                id = Id_constructor;
                 break;
             default:
                 id = 0;

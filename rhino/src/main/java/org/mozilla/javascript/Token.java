@@ -24,8 +24,8 @@ public class Token {
     }
 
     // debug flags
-    public static final boolean printTrees = false;
-    static final boolean printICode = false;
+    public static final boolean printTrees = true;
+    static final boolean printICode = true;
     static final boolean printNames = printTrees || printICode;
 
     /** Token types. These values correspond to JSTokenType values in jsscan.c. */
@@ -231,7 +231,10 @@ public class Token {
                     TEMPLATE_LITERAL_SUBST + 1, // template literal - tagged/handler
             DOTDOTDOT = TAGGED_TEMPLATE_LITERAL + 1, // spread/rest ...
             NULLISH_COALESCING = DOTDOTDOT + 1, // nullish coalescing (??)
-            LAST_TOKEN = NULLISH_COALESCING;
+            CLASS = NULLISH_COALESCING + 1,
+            CONSTRUCTOR = CLASS + 1,
+            STATIC = CONSTRUCTOR + 1,
+            LAST_TOKEN = STATIC;
 
     /**
      * Returns a name for the token. If Rhino is compiled with certain hardcoded debugging flags in
@@ -582,6 +585,8 @@ public class Token {
                 return "CONST";
             case SETCONST:
                 return "SETCONST";
+            case SETCONSTVAR:
+                return "SETCONSTVAR";
             case ARRAYCOMP:
                 return "ARRAYCOMP";
             case WITHEXPR:
@@ -610,6 +615,10 @@ public class Token {
                 return "TEMPLATE_LITERAL_SUBST";
             case TAGGED_TEMPLATE_LITERAL:
                 return "TAGGED_TEMPLATE_LITERAL";
+            case CLASS:
+                return "CLASS";
+            case CONSTRUCTOR:
+                return "CONSTRUCTOR";
         }
 
         // Token without name
@@ -689,6 +698,10 @@ public class Token {
                 return "throw";
             case Token.TRY:
                 return "try";
+            case Token.CONSTRUCTOR:
+                return "constructor";
+            case Token.CLASS:
+                return "class";
             default:
                 return null;
         }

@@ -26,9 +26,10 @@ public class ScriptNode extends Scope {
     private int endLineno = -1;
 
     private List<FunctionNode> functions;
+    private ArrayList<ClassDefNode> classes;
     private List<RegExpLiteral> regexps;
     private List<TemplateLiteral> templateLiterals;
-    private List<FunctionNode> EMPTY_LIST = Collections.emptyList();
+    private final List<FunctionNode> EMPTY_LIST = Collections.emptyList();
 
     private List<Symbol> symbols = new ArrayList<>(4);
     private int paramCount = 0;
@@ -38,6 +39,7 @@ public class ScriptNode extends Scope {
     private Object compilerData;
     private int tempNumber = 0;
     private boolean inStrictMode;
+    private final List<ClassDefNode> EMPTY_CLASS_LIST = Collections.emptyList();
 
     {
         // during parsing, a ScriptNode or FunctionNode's top scope is itself
@@ -158,6 +160,31 @@ public class ScriptNode extends Scope {
 
     public List<FunctionNode> getFunctions() {
         return functions == null ? EMPTY_LIST : functions;
+    }
+
+    public int getClassCount() {
+        return classes == null ? 0 : classes.size();
+    }
+
+    public ClassDefNode getClassNode(int i) {
+        return classes.get(i);
+    }
+
+    public List<ClassDefNode> getClasses() {
+        return classes == null ? EMPTY_CLASS_LIST : classes;
+    }
+
+    /**
+     * Adds a {@link FunctionNode} to the functions table for codegen. Does not set the parent of
+     * the node.
+     *
+     * @return the index of the function within its parent
+     */
+    public int addClass(ClassDefNode classNode) {
+        if (classNode == null) codeBug();
+        if (classes == null) classes = new ArrayList<>();
+        classes.add(classNode);
+        return classes.size() - 1;
     }
 
     /**

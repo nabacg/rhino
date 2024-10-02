@@ -66,7 +66,9 @@ public class Node implements Iterable<Node> {
             TEMPLATE_LITERAL_PROP = 27,
             TRAILING_COMMA = 28,
             OBJECT_LITERAL_DESTRUCTURING = 29,
-            LAST_PROP = 29;
+            CLASS_PROP = 30,
+            STATIC_CLASS_PROPERTY = 31,
+            LAST_PROP = 31;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -382,6 +384,10 @@ public class Node implements Iterable<Node> {
             switch (propType) {
                 case FUNCTION_PROP:
                     return "function";
+                case CLASS_PROP:
+                    return "class";
+                case STATIC_CLASS_PROPERTY:
+                    return "static";
                 case LOCAL_PROP:
                     return "local";
                 case LOCAL_BLOCK_PROP:

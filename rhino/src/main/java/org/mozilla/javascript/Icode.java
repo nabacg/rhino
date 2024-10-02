@@ -142,9 +142,9 @@ abstract class Icode {
             Icode_TEMPLATE_LITERAL_CALLSITE = Icode_REG_BIGINT4 - 1,
             Icode_LITERAL_KEYS = Icode_TEMPLATE_LITERAL_CALLSITE - 1,
             Icode_LITERAL_KEY_SET = Icode_LITERAL_KEYS - 1,
-
+            Icode_CLASS_DEF = Icode_LITERAL_KEY_SET - 1,
             // Last icode
-            MIN_ICODE = Icode_LITERAL_KEY_SET;
+            MIN_ICODE = Icode_CLASS_DEF;
 
     static String bytecodeName(int bytecode) {
         if (!validBytecode(bytecode)) {
@@ -310,6 +310,8 @@ abstract class Icode {
                 return "LITERAL_KEYS";
             case Icode_LITERAL_KEY_SET:
                 return "LITERAL_KEY_SET";
+            case Icode_CLASS_DEF:
+                return "CLASS_DEF";
         }
 
         // icode without name

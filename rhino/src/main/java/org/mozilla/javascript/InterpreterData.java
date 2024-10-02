@@ -67,6 +67,7 @@ final class InterpreterData implements Serializable, DebuggableScript {
     // see comments in NativeFuncion for definition of argNames and argCount
     String[] argNames;
     boolean[] argIsConst;
+    boolean isStaticMethod;
     int argCount;
     boolean argsHasRest;
     boolean argsHasDefaults;
