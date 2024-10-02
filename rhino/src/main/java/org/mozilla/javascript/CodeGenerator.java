@@ -243,11 +243,22 @@ class CodeGenerator extends Icode {
             gen.scriptOrFn = cn;
             gen.itsData = new InterpreterData(itsData);
             gen.generateClassDefICode();
-            array[i] = gen.itsData;
+            
+            // Note: we store them in reverse order because otherwise we'd need to know
+            // at runtime how many functions we have. In this way, to access the i-th class,
+            // we just have to start from the end
+            array[classCount - i - 1] = gen.itsData;
         }
-        itsData.itsNestedFunctions =
-                array; // TODO - this will override function defs, we need to merge class array and
-        // function array
+        
+        // Existing array contains functions; we'll put classes at the end
+        itsData.itsNestedFunctions = concat(itsData.itsNestedFunctions, array);
+    }
+
+    private InterpreterData[] concat(InterpreterData[] functions, InterpreterData[] classes) {
+        InterpreterData[] result = new InterpreterData[functions.length + classes.length];
+        System.arraycopy(functions, 0, result, 0, functions.length);
+        System.arraycopy(classes, 0, result, functions.length, classes.length);
+        return result;
     }
 
     private void generateClassDefICode() {
