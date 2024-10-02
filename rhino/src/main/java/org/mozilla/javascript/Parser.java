@@ -24,6 +24,7 @@ import org.mozilla.javascript.ast.BigIntLiteral;
 import org.mozilla.javascript.ast.Block;
 import org.mozilla.javascript.ast.BreakStatement;
 import org.mozilla.javascript.ast.CatchClause;
+import org.mozilla.javascript.ast.ClassDefNode;
 import org.mozilla.javascript.ast.Comment;
 import org.mozilla.javascript.ast.ComputedPropertyKey;
 import org.mozilla.javascript.ast.ConditionalExpression;
@@ -35,6 +36,7 @@ import org.mozilla.javascript.ast.EmptyExpression;
 import org.mozilla.javascript.ast.EmptyStatement;
 import org.mozilla.javascript.ast.ErrorNode;
 import org.mozilla.javascript.ast.ExpressionStatement;
+import org.mozilla.javascript.ast.FieldNode;
 import org.mozilla.javascript.ast.ForInLoop;
 import org.mozilla.javascript.ast.ForLoop;
 import org.mozilla.javascript.ast.FunctionCall;
@@ -50,6 +52,7 @@ import org.mozilla.javascript.ast.Label;
 import org.mozilla.javascript.ast.LabeledStatement;
 import org.mozilla.javascript.ast.LetNode;
 import org.mozilla.javascript.ast.Loop;
+import org.mozilla.javascript.ast.MethodNode;
 import org.mozilla.javascript.ast.Name;
 import org.mozilla.javascript.ast.NewExpression;
 import org.mozilla.javascript.ast.NumberLiteral;
@@ -898,6 +901,87 @@ public class Parser {
         }
     }
 
+    private AstNode classNode() throws IOException {
+        if (matchToken(Token.NAME, true)) {
+            Name nameNode = createNameNode();
+            if (matchToken(Token.LC, true)) {
+                consumeToken();
+                List<MethodNode> methods = new ArrayList<>();
+                List<FieldNode> fields = new ArrayList<>();
+                FunctionNode constructor = null;
+                while (!matchToken(Token.RC, true)) {
+                    if (matchToken(Token.STATIC, true)) {
+                        if (matchToken(Token.NAME, true)) {
+                            if (peekToken() != Token.LP) {
+                                // field
+                                Name fieldName = createNameNode();
+                                AstNode initExpr = null;
+                                if (matchToken(Token.ASSIGN, true)) {
+                                    // field with initilizer
+                                    initExpr = assignExpr();
+                                }
+                                if (matchToken(Token.SEMI, true)) {
+                                    fields.add(new FieldNode(fieldName, initExpr, true));
+                                } else {
+                                    reportError("msg.classes.declaration.invalid");
+                                }
+
+                            } else {
+                                Name functionName = createNameNode();
+                                FunctionNode f = function(FunctionNode.FUNCTION_STATEMENT);
+                                f.setFunctionName(functionName);
+                                methods.add(new MethodNode(f, true));
+                            }
+                        } else {
+                            // TODO - more precise error message
+                            reportError("msg.classes.declaration.invalid");
+                        }
+                    }
+                    if (matchToken(Token.CONSTRUCTOR, true)) {
+                        Name constructorName = createNameNode();
+                        constructor = function(FunctionNode.FUNCTION_STATEMENT);
+                        constructor.setFunctionName(constructorName);
+                    }
+                    if (matchToken(Token.NAME, true)) {
+                        if (peekToken() != Token.LP) {
+                            // field
+                            Name fieldName = createNameNode();
+                            AstNode initExpr = null;
+                            if (matchToken(Token.ASSIGN, true)) {
+                                // field with initilizer
+                                initExpr = assignExpr();
+                            }
+                            if (matchToken(Token.SEMI, true)) {
+                                fields.add(new FieldNode(fieldName, initExpr));
+                            } else {
+                                reportError("msg.classes.declaration.invalid");
+                            }
+
+                        } else {
+                            Name functionName = createNameNode();
+                            FunctionNode f = function(FunctionNode.FUNCTION_STATEMENT);
+                            f.setFunctionName(functionName);
+                            methods.add(new MethodNode(f));
+                        }
+                    }
+                }
+                if (constructor == null)
+                    // TODO - we should support default constructor, but at the moment it's
+                    // confusing
+                    //  so I'd rather throw an early error if user doesn't provide one
+                    reportError("msg.classes.declaration.invalid");
+
+                int classSourceStart = ts.tokenBeg;
+                ClassDefNode classNode =
+                        new ClassDefNode(classSourceStart, nameNode, constructor, methods, fields);
+                classNode.setParentScope(currentScope);
+                return classNode;
+            }
+        }
+        reportError("msg.classes.declaration.invalid");
+        return makeErrorNode();
+    }
+
     private FunctionNode function(int type) throws IOException {
         boolean isGenerator = false;
         int syntheticType = type;
@@ -1341,6 +1425,9 @@ public class Parser {
             case Token.FUNCTION:
                 consumeToken();
                 return function(FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
+            case Token.CLASS:
+                consumeToken();
+                return classNode();
 
             case Token.DEFAULT:
                 pn = defaultXmlNamespace();

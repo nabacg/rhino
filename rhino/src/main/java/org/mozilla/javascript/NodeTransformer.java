@@ -12,6 +12,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import org.mozilla.javascript.ast.ClassDefNode;
 import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.Jump;
 import org.mozilla.javascript.ast.Name;
@@ -44,6 +45,10 @@ public class NodeTransformer {
         for (int i = 0; i != tree.getFunctionCount(); ++i) {
             FunctionNode fn = tree.getFunctionNode(i);
             transform(fn, useStrictMode, env);
+        }
+        for (int i = 0; i != tree.getClassCount(); ++i) {
+            ClassDefNode cn = tree.getClassNode(i);
+            transform(cn, useStrictMode, env);
         }
     }
 
@@ -427,6 +432,8 @@ public class NodeTransformer {
                     inStrictMode);
         }
     }
+
+    private void visitConstructor(Node node, ScriptNode tree) {}
 
     protected void visitNew(Node node, ScriptNode tree) {}
 

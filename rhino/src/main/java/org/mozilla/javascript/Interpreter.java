@@ -2346,6 +2346,17 @@ public final class Interpreter extends Icode implements Evaluator {
                             case Icode_CLOSURE_STMT:
                                 initFunction(cx, frame.scope, frame.fnOrScript, indexReg);
                                 continue Loop;
+                            case Icode_CLASS_DEF:
+                                InterpretedFunction ctor =
+                                        InterpretedFunction.createClassConstructor(
+                                                cx, frame.scope, frame.fnOrScript, indexReg);
+                                ScriptRuntime.initFunction(
+                                        cx,
+                                        frame.scope,
+                                        ctor,
+                                        FunctionNode.FUNCTION_STATEMENT,
+                                        frame.fnOrScript.idata.evalScriptFlag);
+                                continue Loop;
                             case Token.REGEXP:
                                 Object re = frame.idata.itsRegExpLiterals[indexReg];
                                 stack[++stackTop] = ScriptRuntime.wrapRegExp(cx, frame.scope, re);

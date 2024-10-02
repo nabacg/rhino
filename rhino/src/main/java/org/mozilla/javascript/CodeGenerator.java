@@ -15,8 +15,10 @@ import java.util.Map;
 import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.AstRoot;
 import org.mozilla.javascript.ast.Block;
+import org.mozilla.javascript.ast.ClassDefNode;
 import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.Jump;
+import org.mozilla.javascript.ast.MethodNode;
 import org.mozilla.javascript.ast.Scope;
 import org.mozilla.javascript.ast.ScriptNode;
 import org.mozilla.javascript.ast.TemplateCharacters;
@@ -126,6 +128,7 @@ class CodeGenerator extends Icode {
 
     private void generateICodeFromTree(Node tree) {
         generateNestedFunctions();
+        generateClasses();
 
         generateRegExpLiterals();
 
@@ -215,6 +218,9 @@ class CodeGenerator extends Icode {
             gen.generateFunctionICode();
             array[i] = gen.itsData;
 
+            if (fn.getIntProp(Node.STATIC_CLASS_PROPERTY, 0) == 1) {
+                gen.itsData.isStaticMethod = true;
+            }
             final AstNode fnParent = fn.getParent();
             if (!(fnParent instanceof AstRoot
                     || fnParent instanceof Scope
@@ -223,6 +229,45 @@ class CodeGenerator extends Icode {
             }
         }
         itsData.itsNestedFunctions = array;
+    }
+
+    private void generateClasses() {
+        int classCount = scriptOrFn.getClassCount();
+        if (classCount == 0) return;
+
+        InterpreterData[] array = new InterpreterData[classCount];
+        for (int i = 0; i != classCount; i++) {
+            ClassDefNode cn = scriptOrFn.getClassNode(i);
+            CodeGenerator gen = new CodeGenerator();
+            gen.compilerEnv = compilerEnv;
+            gen.scriptOrFn = cn;
+            gen.itsData = new InterpreterData(itsData);
+            gen.generateClassDefICode();
+            array[i] = gen.itsData;
+        }
+        itsData.itsNestedFunctions = array; // TODO - this will override function defs, we need to merge class array and function array
+    }
+
+    private void generateClassDefICode() {
+        ClassDefNode classDef = (ClassDefNode) scriptOrFn;
+        if (classDef.getClassName() != null) {
+            itsData.itsName = classDef.getClassName().getString();
+        }
+
+        if (classDef.isInStrictMode()) {
+            itsData.isStrict = true;
+        }
+
+        itsData.declaredAsVar = (classDef.getParent() instanceof VariableInitializer);
+
+        // generate  iCode for constructor function and methods
+        if (classDef.getConstructor() != null)
+            // TODO - handle default constructor
+            generateICodeFromTree(classDef.getTransformedConstructor());
+
+        for (MethodNode m : classDef.getMethods()) {
+            generateICodeFromTree(m.getMethodIR());
+        }
     }
 
     private void generateRegExpLiterals() {
@@ -308,6 +353,11 @@ class CodeGenerator extends Icode {
                     }
                 }
                 break;
+            case Token.CONSTRUCTOR:
+                {
+                    int classIndex = node.getExistingIntProp(Node.CLASS_PROP);
+                    addIndexOp(Icode.Icode_CLASS_DEF, classIndex);
+                }
 
             case Token.LABEL:
             case Token.LOOP:
