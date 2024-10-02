@@ -33,6 +33,32 @@ public class ClassesTest {
     }
 
     @Test
+    public void testDeclareAClassAndAFunction() {
+        var classDeclaration =
+                "class Rectangle {\n"
+                        + "  constructor(height, width) {\n"
+                        + "    this.height = height;\n"
+                        + "    this.width = width;\n"
+                        + "    this.id = 12;\n"
+                        + "  }"
+                        + "}\n"
+                        + "function createRectangle() { return new Rectangle(20, 10); }\n"
+                        + "const r = createRectangle();"
+                        + "r.height === 20";
+
+        Utils.runWithOptimizationLevel(
+                cx -> {
+                    cx.setLanguageVersion(Context.VERSION_ES6);
+                    Scriptable scope = cx.initStandardObjects();
+                    Object actual =
+                            cx.evaluateString(scope, classDeclaration, "declareClass", 0, null);
+                    Assert.assertEquals(true, actual);
+                    return null;
+                },
+                -1);
+    }
+
+    @Test
     public void testSimpleClassDeclaration_WithFields() {
         var classDeclaration =
                 "class ClassWithField {"

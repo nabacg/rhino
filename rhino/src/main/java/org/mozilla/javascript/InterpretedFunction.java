@@ -66,7 +66,9 @@ final class InterpretedFunction extends NativeFunction implements Script {
 
     public static InterpretedFunction createClassConstructor(
             Context cx, Scriptable scope, InterpretedFunction parent, int index) {
-        InterpretedFunction classWrapper = new InterpretedFunction(parent, index);
+        // See note in CodeGenerator::generateClasses
+        int classIndex = parent.idata.itsNestedFunctions.length - 1 - index;
+        InterpretedFunction classWrapper = new InterpretedFunction(parent, classIndex);
         InterpretedFunction ctor = new InterpretedFunction(classWrapper, 0);
         // can I set `this` here using ClassDefinition object?
         ctor.initScriptFunction(cx, scope, false);
