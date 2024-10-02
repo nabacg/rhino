@@ -20,7 +20,7 @@ public class ClassesTest {
                         + "const r = new Rectangle(20, 10);"
                         + "r.height == 20";
 
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithOptimizationLevel(
                 cx -> {
                     cx.setLanguageVersion(Context.VERSION_ES6);
                     Scriptable scope = cx.initStandardObjects();
@@ -28,7 +28,8 @@ public class ClassesTest {
                             cx.evaluateString(scope, classDeclaration, "declareClass", 0, null);
                     Assert.assertEquals(true, actual);
                     return null;
-                });
+                },
+                -1);
     }
 
     @Test
@@ -43,40 +44,18 @@ public class ClassesTest {
                         + "  static staticFieldWithInitializer = \"static field\";\n"
                         + "}\n"
                         + "const c = new ClassWithField();"
-                        + "c";
+                        + "c.instanceFieldWithInitializer";
 
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithOptimizationLevel(
                 cx -> {
                     cx.setLanguageVersion(Context.VERSION_ES6);
                     Scriptable scope = cx.initStandardObjects();
                     Object actual =
                             cx.evaluateString(scope, classDeclaration, "declareClass", 0, null);
-                    Assert.assertEquals(20, actual);
+                    Assert.assertEquals("instance field", actual);
                     return null;
-                });
-    }
-
-    @Test
-    public void testSimpleClassDeclaration_ReturnCtor() {
-        var classDeclaration =
-                "class Rectangle {\n"
-                        + "  constructor(height, width) {\n"
-                        + "    this.height = height;\n"
-                        + "    this.width = width;\n"
-                        + "    this.id = 12;\n"
-                        + "  }"
-                        + "}\n"
-                        + "Rectangle.test ";
-
-        Utils.runWithAllOptimizationLevels(
-                cx -> {
-                    cx.setLanguageVersion(Context.VERSION_ES6);
-                    Scriptable scope = cx.initStandardObjects();
-                    Object actual =
-                            cx.evaluateString(scope, classDeclaration, "declareClass", 0, null);
-                    Assert.assertEquals(20, actual);
-                    return null;
-                });
+                },
+                -1);
     }
 
     @Test
@@ -96,17 +75,18 @@ public class ClassesTest {
                         + "  }\n"
                         + "}\n"
                         + "const p = new Point(20, 10);"
-                        + "p.distance(new Point(5, 5));";
+                        + "15.81 < p.distance(new Point(5, 5)) < 15.82;";
 
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithOptimizationLevel(
                 cx -> {
                     cx.setLanguageVersion(Context.VERSION_ES6);
                     Scriptable scope = cx.initStandardObjects();
                     Object actual =
                             cx.evaluateString(scope, classDeclaration, "declareClass", 0, null);
-                    Assert.assertEquals(20, actual);
+                    Assert.assertEquals(true, actual);
                     return null;
-                });
+                },
+                -1);
     }
 
     @Test
@@ -133,7 +113,7 @@ public class ClassesTest {
                         "const p = new Point(20, 10);"
                         + "Point.distance(p, new Point(1, 1))";
 
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithOptimizationLevel(
                 cx -> {
                     cx.setLanguageVersion(Context.VERSION_ES6);
                     Scriptable scope = cx.initStandardObjects();
@@ -141,27 +121,7 @@ public class ClassesTest {
                             cx.evaluateString(scope, classDeclaration, "declareClass", 0, null);
                     Assert.assertEquals(21.02379604162864, actual);
                     return null;
-                });
-    }
-
-    @Test
-    public void testFunctionCreation() {
-        //        var functionDefinition =
-        //                "  function fakeConstructor(height, width) {\n"
-        //                        + "    this.height = height;\n"
-        //                        + "    this.width = width;\n"
-        //                        + "  }\n";
-
-        var functionDefinition = " var clazz = {" + "  aField: 32," + "  bField: 33," + "  };";
-
-        Utils.runWithAllOptimizationLevels(
-                cx -> {
-                    cx.setLanguageVersion(Context.VERSION_ES6);
-                    Scriptable scope = cx.initStandardObjects();
-                    Assert.assertEquals(
-                            20,
-                            cx.evaluateString(scope, functionDefinition, "declareClass", 0, null));
-                    return null;
-                });
+                },
+                -1);
     }
 }

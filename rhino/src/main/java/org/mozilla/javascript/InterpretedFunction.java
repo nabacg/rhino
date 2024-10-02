@@ -71,7 +71,7 @@ final class InterpretedFunction extends NativeFunction implements Script {
         // can I set `this` here using ClassDefinition object?
         ctor.initScriptFunction(cx, scope, false);
 
-//        ScriptableObject.defineProperty(ctor, "test", 42, READONLY);
+        //        ScriptableObject.defineProperty(ctor, "test", 42, READONLY);
         Scriptable proto = cx.newObject(scope);
         for (int i = 1; i < classWrapper.idata.getFunctionCount(); i++) {
             var function = new InterpretedFunction(classWrapper, i);
