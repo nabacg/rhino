@@ -245,7 +245,9 @@ class CodeGenerator extends Icode {
             gen.generateClassDefICode();
             array[i] = gen.itsData;
         }
-        itsData.itsNestedFunctions = array; // TODO - this will override function defs, we need to merge class array and function array
+        itsData.itsNestedFunctions =
+                array; // TODO - this will override function defs, we need to merge class array and
+        // function array
     }
 
     private void generateClassDefICode() {
